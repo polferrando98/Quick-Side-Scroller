@@ -98,6 +98,7 @@ struct globals
 	SDL_Renderer* renderer = nullptr;
 	SDL_Rect Explosion;
 	SDL_Texture* background = nullptr;
+	SDL_Texture* gameover = nullptr;
 	SDL_Texture* ship = nullptr;
 	SDL_Texture* shot = nullptr;
 	SDL_Texture* enemy_texture = nullptr;
@@ -119,20 +120,14 @@ struct globals
 
 void gameover()
 {
+	SDL_Init(SDL_INIT_EVERYTHING);
+	SDL_Renderer *renderer = nullptr;
+	IMG_Init(IMG_INIT_PNG);
+	g.window = SDL_CreateWindow("QSS - Quick Side Scroller by APERTURE WOLVES", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+	g.renderer = SDL_CreateRenderer(g.window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
-	int lives = 5;
-	if (lives > 0)
-	{
-		for (int i = 0; i <= 80 ; i++)
-		{
-			if (e.x = 0)
-				lives--;
-		}	
-	}
-	else
-	{	//gameover.png }
-	}
-
+	g.gameover = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/gameover.png"));
+	SDL_Delay(5000);
 }
 
 // ----------------------------------------------------------------
@@ -142,11 +137,9 @@ void Start()
 	SDL_Init(SDL_INIT_EVERYTHING);
 
 	SDL_Renderer *renderer = nullptr;
-
 	
-
 	// Create window & renderer
-	g.window = SDL_CreateWindow("QSS - Quick Side Scroller - 0.5", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+	g.window = SDL_CreateWindow("QSS - Quick Side Scroller by APERTURE WOLVES", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
 	g.renderer = SDL_CreateRenderer(g.window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
 	// Load image lib --
@@ -466,10 +459,26 @@ void Draw()
 // ----------------------------------------------------------------
 int main(int argc, char* args[])
 {
+	gameover();
 	Start();
 
 	while(CheckInput())
 	{
+		int lives = 5;
+		if (lives > 0)
+		{
+			for (int i = 0; i <= 80; i++)
+			{
+				if (e.x = 0)
+					lives--;
+			}
+		}
+		else
+		{
+			gameover();
+			Finish();
+		}
+	
 		collisionDetection();
 		MoveStuff();
 		Draw();
