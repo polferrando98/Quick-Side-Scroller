@@ -57,7 +57,9 @@
 #define NUM_SHOTS 32
 #define SHOT_SPEED 5
 #define NUM_ENEMIES 80
+#define NUM_TANKS 20
 #define ENEMY_TEXTURE_WIDTH 165
+#define TANK_TEXTURE_WIDTH 80
 #define ENEMY_SPEED 1
 #define COLLISION_MARGIN 10
 
@@ -77,6 +79,15 @@ struct enemy
 	SDL_Rect src;
 };
 
+struct tank
+{
+	int x, y;
+	bool alive;
+	bool explosion;
+	bool ex_sound;
+	SDL_Rect src;
+};
+
 struct globals
 {
 	SDL_Window* window = nullptr;
@@ -87,6 +98,7 @@ struct globals
 	SDL_Texture* shot = nullptr;
 	SDL_Texture* enemy_texture = nullptr;
 	SDL_Texture* Sprites = nullptr;
+	SDL_Texture* tanks_texture = nullptr;
 	int background_width = 0;
 	int ship_x = 0;
 	int ship_y = 0;
@@ -98,7 +110,8 @@ struct globals
 	int scroll = 0;
 	projectile shots[NUM_SHOTS];
 	enemy enemies[NUM_ENEMIES];
-} g; // automatically create an insteance called "g"
+	tank tanks[NUM_TANKS];
+} g; // automatically create an instance called "g"
 
 
 // ----------------------------------------------------------------
@@ -119,6 +132,8 @@ void Start()
 	g.enemy_texture = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/ships.png"));
 	SDL_QueryTexture(g.background, nullptr, nullptr, &g.background_width, nullptr);
 	g.Sprites = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/sprites.png"));
+	g.tanks_texture = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/tank.png"));
+
 
 	// Create mixer --
 	Mix_Init(MIX_INIT_OGG);
@@ -147,6 +162,17 @@ void Start()
 		col = rand() % 3;
 		g.enemies[i].src = { ENEMY_TEXTURE_WIDTH*fila, 56*col, ENEMY_TEXTURE_WIDTH, 56};
 	}
+
+	//Init tanks	
+	for (int i = 0; i < NUM_TANKS; ++i) {
+		g.tanks[i].x = SCREEN_WIDTH + 50 + (200 * i);
+		g.tanks[i].y = 430;
+		g.tanks[i].alive = true;
+		g.tanks[i].explosion = true;
+		g.tanks[i].ex_sound = false;		
+		g.tanks[i].src = { 0, 0, TANK_TEXTURE_WIDTH, 66 };
+	}
+	
 }
 
 // ----------------------------------------------------------------
@@ -215,7 +241,7 @@ void collisionDetection()  //Bastant millorable
 								g.enemies[enemy_index].alive = false;
 								g.shots[shot_index].alive = false;
 								g.enemies[enemy_index].explosion = false;
-								g.enemies[enemy_index].ex_sound = true;
+								g.enemies[enemy_index].ex_sound = true;							
 							}
 						}
 					}
@@ -268,6 +294,17 @@ void MoveStuff()
 				g.enemies[i].alive = false;
 		}
 	}
+	//tanks
+	for (int i = 0; i < NUM_TANKS; ++i)
+	{
+		if (g.tanks[i].alive)
+		{
+			if (1)
+				g.tanks[i].x -= ENEMY_SPEED;
+			else
+				g.tanks[i].alive = false;
+		}
+	}
 }
 
 // ----------------------------------------------------------------
@@ -307,6 +344,16 @@ void Draw()
 		{
 			target = { g.enemies[i].x, g.enemies[i].y, 88, 28 };
 			SDL_RenderCopy(g.renderer, g.enemy_texture, &g.enemies[i].src, &target);
+		}
+	}
+
+	//Draw enemies -p
+	for (int i = 0; i < NUM_TANKS; ++i)
+	{
+		if (g.tanks[i].alive)
+		{
+			target = { g.tanks[i].x, g.tanks[i].y, 80, 66 };
+			SDL_RenderCopy(g.renderer, g.tanks_texture, &g.tanks[i].src, &target);
 		}
 	}
 
