@@ -62,6 +62,7 @@
 #define TANK_TEXTURE_WIDTH 80
 #define ENEMY_SPEED 1
 #define COLLISION_MARGIN 10
+#define TANK_COLLISION_MARGIN 20
 
 struct projectile
 {
@@ -249,6 +250,25 @@ void collisionDetection()  //Bastant millorable
 			}
 		}
 	}
+
+	for (int enemy_index = 0; enemy_index < NUM_TANKS; enemy_index++) {
+		for (int shot_index = 0; shot_index < NUM_SHOTS; shot_index++) {
+			if (g.shots[shot_index].alive == true && g.tanks[enemy_index].alive == true) {
+				if ((g.shots[shot_index].x + COLLISION_MARGIN) > g.tanks[enemy_index].x) {
+					if ((g.shots[shot_index].x - COLLISION_MARGIN) < g.tanks[enemy_index].x) {
+						if ((g.shots[shot_index].y + TANK_COLLISION_MARGIN) > g.tanks[enemy_index].y) {
+							if ((g.shots[shot_index].y - TANK_COLLISION_MARGIN) < g.tanks[enemy_index].y) {
+								g.tanks[enemy_index].alive = false;
+								g.shots[shot_index].alive = false;
+								g.tanks[enemy_index].explosion = false;
+								g.tanks[enemy_index].ex_sound = true;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 // ----------------------------------------------------------------
@@ -367,6 +387,18 @@ void Draw()
 			target = { g.enemies[i].x, g.enemies[i].y, 32, 32 };
 			SDL_RenderCopy(g.renderer, g.Sprites, &g.Explosion, &target);
 			g.enemies[i].explosion = true;
+		}
+	}
+
+	for (int i = 0; i < NUM_TANKS; ++i)
+	{
+		g.Explosion = { 224,224,32,32 };
+		if (g.tanks[i].explosion == false)
+		{
+			Mix_PlayChannel(-1, g.exp, 0);
+			target = { g.tanks[i].x, g.tanks[i].y, 32, 32 };
+			SDL_RenderCopy(g.renderer, g.Sprites, &g.Explosion, &target);
+			g.tanks[i].explosion = true;
 		}
 	}
 
