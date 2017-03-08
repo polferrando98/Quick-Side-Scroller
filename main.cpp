@@ -39,6 +39,8 @@
 #include "SDL\include\SDL.h"
 #include "SDL_image\include\SDL_image.h"
 #include "SDL_mixer\include\SDL_mixer.h"
+#include<stdlib.h>
+#include<time.h>
 
 #pragma comment( lib, "SDL/libx86/SDL2.lib" )
 #pragma comment( lib, "SDL/libx86/SDL2main.lib" )
@@ -54,8 +56,8 @@
 #define SHIP_SPEED 3
 #define NUM_SHOTS 32
 #define SHOT_SPEED 5
-#define NUM_ENEMIES 8
-#define ENEMY_TEXTURE_WIDTH 177
+#define NUM_ENEMIES 80
+#define ENEMY_TEXTURE_WIDTH 165
 #define ENEMY_SPEED 1
 #define COLLISION_MARGIN 10
 
@@ -70,6 +72,8 @@ struct enemy
 {
 	int x, y;
 	bool alive;
+	bool explosion;
+	bool ex_sound;
 	SDL_Rect src;
 };
 
@@ -77,10 +81,12 @@ struct globals
 {
 	SDL_Window* window = nullptr;
 	SDL_Renderer* renderer = nullptr;
+	SDL_Rect Explosion;
 	SDL_Texture* background = nullptr;
 	SDL_Texture* ship = nullptr;
 	SDL_Texture* shot = nullptr;
 	SDL_Texture* enemy_texture = nullptr;
+	SDL_Texture* Sprites = nullptr;
 	int background_width = 0;
 	int ship_x = 0;
 	int ship_y = 0;
@@ -88,6 +94,7 @@ struct globals
 	bool fire, up, down, left, right;
 	Mix_Music* music = nullptr;
 	Mix_Chunk* fx_shoot = nullptr;
+	Mix_Chunk* exp = nullptr;
 	int scroll = 0;
 	projectile shots[NUM_SHOTS];
 	enemy enemies[NUM_ENEMIES];
@@ -111,6 +118,7 @@ void Start()
 	g.shot = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/shot.png"));
 	g.enemy_texture = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/ships.png"));
 	SDL_QueryTexture(g.background, nullptr, nullptr, &g.background_width, nullptr);
+	g.Sprites = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/sprites.png"));
 
 	// Create mixer --
 	Mix_Init(MIX_INIT_OGG);
@@ -118,6 +126,7 @@ void Start()
 	g.music = Mix_LoadMUS("assets/music.ogg");
 	Mix_PlayMusic(g.music, -1);
 	g.fx_shoot = Mix_LoadWAV("assets/laser.wav");
+	g.exp = Mix_LoadWAV("assets/exp.wav");
 
 	// Init other vars --
 	g.ship_x = 100;
@@ -125,11 +134,18 @@ void Start()
 	g.fire = g.up = g.down = g.left = g.right = false;
 
 	// Init enemies -p
+	srand(time(NULL)); //Random seed
+	int fila;
+	int col;
 	for (int i = 0; i < NUM_ENEMIES; i++) {
 		g.enemies[i].x = SCREEN_WIDTH + 50 + (200 * i) ;
-		g.enemies[i].y = 50 + ( i % 4 ) * 100;
+		g.enemies[i].y = (rand()%400)+80; //Random position 
 		g.enemies[i].alive = true;
-		g.enemies[i].src = { 0, 0, ENEMY_TEXTURE_WIDTH, 56};
+		g.enemies[i].explosion = true;
+		g.enemies[i].ex_sound = false;
+		fila = rand() % 3;
+		col = rand() % 3;
+		g.enemies[i].src = { ENEMY_TEXTURE_WIDTH*fila, 56*col, ENEMY_TEXTURE_WIDTH, 56};
 	}
 }
 
@@ -143,6 +159,7 @@ void Finish()
 	SDL_DestroyTexture(g.shot);
 	SDL_DestroyTexture(g.ship);
 	SDL_DestroyTexture(g.background);
+	SDL_DestroyTexture(g.Sprites);
 	IMG_Quit();
 	SDL_DestroyRenderer(g.renderer);
 	SDL_DestroyWindow(g.window);
@@ -197,6 +214,8 @@ void collisionDetection()  //Bastant millorable
 							if ((g.shots[shot_index].y - COLLISION_MARGIN) < g.enemies[enemy_index].y) {
 								g.enemies[enemy_index].alive = false;
 								g.shots[shot_index].alive = false;
+								g.enemies[enemy_index].explosion = false;
+								g.enemies[enemy_index].ex_sound = true;
 							}
 						}
 					}
@@ -288,6 +307,19 @@ void Draw()
 		{
 			target = { g.enemies[i].x, g.enemies[i].y, 88, 28 };
 			SDL_RenderCopy(g.renderer, g.enemy_texture, &g.enemies[i].src, &target);
+		}
+	}
+
+	//Draw explosion
+	for (int i = 0; i < NUM_ENEMIES; ++i)
+	{
+		g.Explosion = { 224,224,32,32 };
+		if (g.enemies[i].explosion == false)
+		{
+			Mix_PlayChannel(-1, g.exp, 0);
+			target = { g.enemies[i].x, g.enemies[i].y, 32, 32 };
+			SDL_RenderCopy(g.renderer, g.Sprites, &g.Explosion, &target);
+			g.enemies[i].explosion = true;
 		}
 	}
 
