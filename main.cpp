@@ -62,7 +62,8 @@
 #define TANK_TEXTURE_WIDTH 80
 #define ENEMY_SPEED 1
 #define COLLISION_MARGIN 10
-#define TANK_COLLISION_MARGIN 20
+#define COLLISION_MARGIN_Y 30
+#define TANK_COLLISION_MARGIN 50
 
 struct projectile
 {
@@ -238,7 +239,7 @@ void collisionDetection()  //Bastant millorable
 				if ((g.shots[shot_index].x + COLLISION_MARGIN) > g.enemies[enemy_index].x ) {
 					if ((g.shots[shot_index].x - COLLISION_MARGIN) < g.enemies[enemy_index].x) {
 						if ((g.shots[shot_index].y + COLLISION_MARGIN) > g.enemies[enemy_index].y) {
-							if ((g.shots[shot_index].y - COLLISION_MARGIN) < g.enemies[enemy_index].y) {
+							if ((g.shots[shot_index].y - COLLISION_MARGIN_Y) < g.enemies[enemy_index].y) {
 								g.enemies[enemy_index].alive = false;
 								g.shots[shot_index].alive = false;
 								g.enemies[enemy_index].explosion = false;
@@ -256,7 +257,7 @@ void collisionDetection()  //Bastant millorable
 			if (g.shots[shot_index].alive == true && g.tanks[enemy_index].alive == true) {
 				if ((g.shots[shot_index].x + COLLISION_MARGIN) > g.tanks[enemy_index].x) {
 					if ((g.shots[shot_index].x - COLLISION_MARGIN) < g.tanks[enemy_index].x) {
-						if ((g.shots[shot_index].y + TANK_COLLISION_MARGIN) > g.tanks[enemy_index].y) {
+						if ((g.shots[shot_index].y + COLLISION_MARGIN) > g.tanks[enemy_index].y) {
 							if ((g.shots[shot_index].y - TANK_COLLISION_MARGIN) < g.tanks[enemy_index].y) {
 								g.tanks[enemy_index].alive = false;
 								g.shots[shot_index].alive = false;
