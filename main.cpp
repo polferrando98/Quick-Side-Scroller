@@ -39,6 +39,7 @@
 #include "SDL\include\SDL.h"
 #include "SDL_image\include\SDL_image.h"
 #include "SDL_mixer\include\SDL_mixer.h"
+#include "SDL\include\SDL_ttf.h"
 #include<stdlib.h>
 #include<time.h>
 
@@ -46,6 +47,7 @@
 #pragma comment( lib, "SDL/libx86/SDL2main.lib" )
 #pragma comment( lib, "SDL_image/libx86/SDL2_image.lib" )
 #pragma comment( lib, "SDL_mixer/libx86/SDL2_mixer.lib" )
+#pragma comment( lib, "SDL/libx86/SDL2_ttf.lib")
 
 //Primer de tot recordar que el ric no es mirara el codi
 
@@ -79,7 +81,7 @@ struct enemy
 	bool explosion;
 	bool ex_sound;
 	SDL_Rect src;
-};
+}e;
 
 struct tank
 {
@@ -115,12 +117,33 @@ struct globals
 	tank tanks[NUM_TANKS];
 } g; // automatically create an instance called "g"
 
+void gameover()
+{
+
+	int lives = 5;
+	if (lives > 0)
+	{
+		for (int i = 0; i <= 80 ; i++)
+		{
+			if (e.x = 0)
+				lives--;
+		}	
+	}
+	else
+	{	//gameover.png }
+	}
+
+}
 
 // ----------------------------------------------------------------
 
 void Start()
 {
 	SDL_Init(SDL_INIT_EVERYTHING);
+
+	SDL_Renderer *renderer = nullptr;
+
+	
 
 	// Create window & renderer
 	g.window = SDL_CreateWindow("QSS - Quick Side Scroller - 0.5", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
@@ -136,6 +159,12 @@ void Start()
 	g.Sprites = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/sprites.png"));
 	g.tanks_texture = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/tank.png"));
 
+	TTF_Font* Sans = TTF_OpenFont("Sans.ttf", 24);
+	SDL_Color White = { 0, 0, 0 };
+	SDL_Surface* surfaceMessage = TTF_RenderText_Solid(Sans, "put your text here", White);
+	SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage);
+	SDL_Rect Message_rect = { 0, 0, 100, 100 };
+	SDL_RenderCopy(renderer, Message, NULL, &Message_rect);
 
 	// Create mixer --
 	Mix_Init(MIX_INIT_OGG);
@@ -231,7 +260,7 @@ bool CheckInput()
 	return ret;
 }
 
-void collisionDetection()  //Bastant millorable
+void collisionDetection()  
 {
 	for (int enemy_index = 0; enemy_index < NUM_ENEMIES; enemy_index++) {
 		for (int shot_index = 0; shot_index < NUM_SHOTS; shot_index++) {
@@ -276,11 +305,38 @@ void collisionDetection()  //Bastant millorable
 void MoveStuff()
 {
 	// Calc new ship position
-	if(g.up) g.ship_y -= SHIP_SPEED;
-	if(g.down) g.ship_y += SHIP_SPEED;
-	if(g.left) g.ship_x -= SHIP_SPEED;
-	if(g.right)	g.ship_x += SHIP_SPEED;
+	
+	if (g.up)	//143x46		//640x480
+	{
+		if (g.ship_y > 0)
+			g.ship_y -= SHIP_SPEED;
+		else
+			g.ship_y = 0;
+	}
 
+	if (g.down)
+	{
+		if (g.ship_y < 434)
+			g.ship_y += SHIP_SPEED;
+		else
+			g.ship_y = 434;
+	}
+		
+	if (g.left)
+	{
+		if (g.ship_x > 0)
+			g.ship_x -= SHIP_SPEED;
+		else
+			g.ship_x = 0;
+	}
+
+	if (g.right)
+	{
+		if (g.ship_x < 540)
+			g.ship_x += SHIP_SPEED;
+		else
+			g.ship_x = 540;
+	}
 	if(g.fire)
 	{
 		Mix_PlayChannel(-1, g.fx_shoot, 0);
