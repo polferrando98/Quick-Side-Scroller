@@ -45,6 +45,8 @@
 #pragma comment( lib, "SDL_image/libx86/SDL2_image.lib" )
 #pragma comment( lib, "SDL_mixer/libx86/SDL2_mixer.lib" )
 
+//Primer de tot recordar que el ric no es mirara el codi
+
 // Globals --------------------------------------------------------
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
@@ -52,11 +54,23 @@
 #define SHIP_SPEED 3
 #define NUM_SHOTS 32
 #define SHOT_SPEED 5
+#define NUM_ENEMIES 8
+#define ENEMY_TEXTURE_WIDTH 177
+#define ENEMY_SPEED 1
+#define COLLISION_MARGIN 10
 
 struct projectile
 {
 	int x, y;
 	bool alive;
+	SDL_Rect src = { 0,0,11,8 };
+};
+
+struct enemy 
+{
+	int x, y;
+	bool alive;
+	SDL_Rect src;
 };
 
 struct globals
@@ -66,6 +80,7 @@ struct globals
 	SDL_Texture* background = nullptr;
 	SDL_Texture* ship = nullptr;
 	SDL_Texture* shot = nullptr;
+	SDL_Texture* enemy_texture = nullptr;
 	int background_width = 0;
 	int ship_x = 0;
 	int ship_y = 0;
@@ -75,9 +90,12 @@ struct globals
 	Mix_Chunk* fx_shoot = nullptr;
 	int scroll = 0;
 	projectile shots[NUM_SHOTS];
+	enemy enemies[NUM_ENEMIES];
 } g; // automatically create an insteance called "g"
 
+
 // ----------------------------------------------------------------
+
 void Start()
 {
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -91,6 +109,7 @@ void Start()
 	g.background = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/background.png"));
 	g.ship = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/ship.png"));
 	g.shot = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/shot.png"));
+	g.enemy_texture = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/ships.png"));
 	SDL_QueryTexture(g.background, nullptr, nullptr, &g.background_width, nullptr);
 
 	// Create mixer --
@@ -104,6 +123,14 @@ void Start()
 	g.ship_x = 100;
 	g.ship_y = SCREEN_HEIGHT / 2;
 	g.fire = g.up = g.down = g.left = g.right = false;
+
+	// Init enemies -p
+	for (int i = 0; i < NUM_ENEMIES; i++) {
+		g.enemies[i].x = SCREEN_WIDTH + 50 + (200 * i) ;
+		g.enemies[i].y = 50 + ( i % 4 ) * 100;
+		g.enemies[i].alive = true;
+		g.enemies[i].src = { 0, 0, ENEMY_TEXTURE_WIDTH, 56};
+	}
 }
 
 // ----------------------------------------------------------------
@@ -159,6 +186,26 @@ bool CheckInput()
 	return ret;
 }
 
+void collisionDetection()  //Bastant millorable
+{
+	for (int enemy_index = 0; enemy_index < NUM_ENEMIES; enemy_index++) {
+		for (int shot_index = 0; shot_index < NUM_SHOTS; shot_index++) {
+			if (g.shots[shot_index].alive == true && g.enemies[enemy_index].alive == true) {
+				if ((g.shots[shot_index].x + COLLISION_MARGIN) > g.enemies[enemy_index].x ) {
+					if ((g.shots[shot_index].x - COLLISION_MARGIN) < g.enemies[enemy_index].x) {
+						if ((g.shots[shot_index].y + COLLISION_MARGIN) > g.enemies[enemy_index].y) {
+							if ((g.shots[shot_index].y - COLLISION_MARGIN) < g.enemies[enemy_index].y) {
+								g.enemies[enemy_index].alive = false;
+								g.shots[shot_index].alive = false;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 // ----------------------------------------------------------------
 void MoveStuff()
 {
@@ -177,8 +224,8 @@ void MoveStuff()
 			g.last_shot = 0;
 
 		g.shots[g.last_shot].alive = true;
-		g.shots[g.last_shot].x = g.ship_x + 32;
-		g.shots[g.last_shot].y = g.ship_y;
+		g.shots[g.last_shot].x = g.ship_x + 92;
+		g.shots[g.last_shot].y = g.ship_y + 23;
 		++g.last_shot;
 	}
 
@@ -188,8 +235,18 @@ void MoveStuff()
 		{
 			if(g.shots[i].x < SCREEN_WIDTH)
 				g.shots[i].x += SHOT_SPEED;
+		}
+	}
+
+	//enemies
+	for (int i = 0; i < NUM_ENEMIES; ++i)
+	{
+		if (g.enemies[i].alive)
+		{
+			if (1)
+				g.enemies[i].x -= ENEMY_SPEED;
 			else
-				g.shots[i].alive = false;
+				g.enemies[i].alive = false;
 		}
 	}
 }
@@ -211,7 +268,7 @@ void Draw()
 	SDL_RenderCopy(g.renderer, g.background, nullptr, &target);
 
 	// Draw player's ship --
-	target = { g.ship_x, g.ship_y, 64, 64 };
+	target = { g.ship_x, g.ship_y, 100, 40 };
 	SDL_RenderCopy(g.renderer, g.ship, nullptr, &target);
 
 	// Draw lasers --
@@ -219,8 +276,18 @@ void Draw()
 	{
 		if(g.shots[i].alive)
 		{
-			target = { g.shots[i].x, g.shots[i].y, 64, 64 };
-			SDL_RenderCopy(g.renderer, g.shot, nullptr, &target);
+			target = { g.shots[i].x, g.shots[i].y, 11, 8 };
+			SDL_RenderCopy(g.renderer, g.shot, &g.shots[i].src, &target);
+		}
+	}
+
+	//Draw enemies -p
+	for (int i = 0; i < NUM_ENEMIES; ++i)
+	{
+		if (g.enemies[i].alive)
+		{
+			target = { g.enemies[i].x, g.enemies[i].y, 88, 28 };
+			SDL_RenderCopy(g.renderer, g.enemy_texture, &g.enemies[i].src, &target);
 		}
 	}
 
@@ -235,6 +302,7 @@ int main(int argc, char* args[])
 
 	while(CheckInput())
 	{
+		collisionDetection();
 		MoveStuff();
 		Draw();
 	}
