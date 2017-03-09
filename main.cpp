@@ -65,6 +65,8 @@
 #define ENEMY_SPEED 1
 #define COLLISION_MARGIN 10
 #define COLLISION_MARGIN_Y 30
+#define COLLISION_MARGIN_SX 140
+#define COLLISION_MARGIN_SY 40
 #define TANK_COLLISION_MARGIN 50
 
 struct projectile
@@ -109,6 +111,7 @@ struct globals
 	int ship_y = 0;
 	int last_shot = 0;
 	bool fire, up, down, left, right;
+	bool retu;
 	Mix_Music* music = nullptr;
 	Mix_Chunk* fx_shoot = nullptr;
 	Mix_Chunk* exp = nullptr;
@@ -117,18 +120,6 @@ struct globals
 	enemy enemies[NUM_ENEMIES];
 	tank tanks[NUM_TANKS];
 } g; // automatically create an instance called "g"
-
-void gameover()
-{
-	SDL_Init(SDL_INIT_EVERYTHING);
-	SDL_Renderer *renderer = nullptr;
-	IMG_Init(IMG_INIT_PNG);
-	g.window = SDL_CreateWindow("QSS - Quick Side Scroller by APERTURE WOLVES", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
-	g.renderer = SDL_CreateRenderer(g.window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-
-	g.gameover = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/gameover.png"));
-	SDL_Delay(5000);
-}
 
 // ----------------------------------------------------------------
 
@@ -141,6 +132,11 @@ void Start()
 	// Create window & renderer
 	g.window = SDL_CreateWindow("QSS - Quick Side Scroller by APERTURE WOLVES", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
 	g.renderer = SDL_CreateRenderer(g.window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+
+
+	//initial page
+	
+
 
 	// Load image lib --
 	IMG_Init(IMG_INIT_PNG);
@@ -196,6 +192,8 @@ void Start()
 		g.tanks[i].ex_sound = false;		
 		g.tanks[i].src = { 0, 0, TANK_TEXTURE_WIDTH, 66 };
 	}
+
+	g.retu = true;
 	
 }
 
@@ -246,8 +244,8 @@ bool CheckInput()
 				case SDLK_SPACE: g.fire = (event.key.repeat == 0); break;
 			}
 		}
-		else if (event.type == SDL_QUIT)
-			ret = false;
+		//else if (event.type == SDL_QUIT)
+			//ret = false;
 	}
 
 	return ret;
@@ -292,6 +290,20 @@ void collisionDetection()
 			}
 		}
 	}
+
+	for (int enemy_index = 0; enemy_index < NUM_TANKS; enemy_index++) {
+			if (g.tanks[enemy_index].alive == true) {
+				if ( g.ship_x+COLLISION_MARGIN_SX> g.enemies[enemy_index].x) {
+					if ((g.ship_x - COLLISION_MARGIN_SX) < g.enemies[enemy_index].x) {
+						if ((g.ship_y + COLLISION_MARGIN) > g.enemies[enemy_index].y) {
+							if ((g.ship_y - COLLISION_MARGIN_SY) < g.enemies[enemy_index].y) {
+								g.retu = false;
+							}
+						}
+					}
+				}
+			}
+		}
 }
 
 // ----------------------------------------------------------------
@@ -459,32 +471,34 @@ void Draw()
 // ----------------------------------------------------------------
 int main(int argc, char* args[])
 {
-	gameover();
-	Start();
-
-	while(CheckInput())
-	{
-		int lives = 5;
-		if (lives > 0)
-		{
-			for (int i = 0; i <= 80; i++)
-			{
-				if (e.x = 0)
-					lives--;
-			}
-		}
-		else
-		{
-			gameover();
-			Finish();
-		}
 	
+	Start();
+	IMG_Init(IMG_INIT_PNG);
+	SDL_Rect SSC;
+	SDL_Texture* StaSc;
+	SDL_Texture* GO;
+	SSC = { 0,0,SCREEN_WIDTH,SCREEN_HEIGHT};
+	StaSc = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/init.png"));
+	GO = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/go.png"));
+	SDL_RenderCopy(g.renderer, StaSc, NULL, &SSC);
+	SDL_RenderPresent(g.renderer);
+	SDL_Delay(3000);
+	
+	
+
+	while(CheckInput() && g.retu)
+	{
 		collisionDetection();
 		MoveStuff();
 		Draw();
 	}
-
+	
+	SDL_RenderCopy(g.renderer, GO, NULL, &SSC);
+	SDL_RenderPresent(g.renderer);
+	SDL_Delay(3000);
+	
 	Finish();
+
 
 	return(0); // EXIT_SUCCESS
 }
