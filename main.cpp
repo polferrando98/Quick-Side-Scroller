@@ -59,15 +59,15 @@
 #define SCROLL_SPEED3 2
 #define SCROLL_SPEED4 4
 #define SCROLL_SPEED5 5
-#define SHIP_SPEED 3
+#define SHIP_SPEED 5
 #define NUM_SHOTS 32
 #define SHOT_SPEED 5
 #define NUM_ENEMIES 80
-#define NUM_TANKS 20
+#define NUM_TANKS 80
 #define ENEMY_TEXTURE_WIDTH 165
 #define TANK_TEXTURE_WIDTH 80
-#define ENEMY_SPEED 6
-#define ENEMY_SPEEDT 5
+#define ENEMY_SPEED 7
+#define ENEMY_SPEEDT 6
 #define COLLISION_MARGIN 10
 #define COLLISION_MARGIN_Y 30
 #define COLLISION_MARGIN_SX 40
@@ -507,7 +507,7 @@ void Draw()
 		if (g.enemies[i].explosion == false)
 		{
 			Mix_PlayChannel(-1, g.exp, 0);
-			target = { g.enemies[i].x, g.enemies[i].y, 32, 32 };
+			target = { g.enemies[i].x, g.enemies[i].y, 64, 64 };
 			SDL_RenderCopy(g.renderer, g.Sprites, &g.Explosion, &target);
 			g.enemies[i].explosion = true;
 		}
