@@ -59,6 +59,7 @@
 #define SCROLL_SPEED3 2
 #define SCROLL_SPEED4 4
 #define SCROLL_SPEED5 5
+#define SCROLL_SPEED6 6
 #define SHIP_SPEED 5
 #define NUM_SHOTS 32
 #define SHOT_SPEED 5
@@ -109,6 +110,7 @@ struct globals
 	SDL_Texture* background3 = nullptr;
 	SDL_Texture* background4 = nullptr;
 	SDL_Texture* background5 = nullptr;
+	SDL_Texture* background6 = nullptr;
 	SDL_Texture* gameover = nullptr;
 	SDL_Texture* ship = nullptr;
 	SDL_Texture* shot = nullptr;
@@ -129,6 +131,7 @@ struct globals
 	int scroll3 = 0;
 	int scroll4 = 0;
 	int scroll5 = 0;
+	int scroll6 = 0;
 	projectile shots[NUM_SHOTS];
 	enemy enemies[NUM_ENEMIES];
 	tank tanks[NUM_TANKS];
@@ -158,6 +161,7 @@ void Start()
 	g.background3= SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/background3.png"));
 	g.background4 = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/background4.png"));
 	g.background5 = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/background5.png"));
+	g.background6 = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/background6.png"));
 	g.ship = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/ship.png"));
 	g.shot = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/shot.png"));
 	g.enemy_texture = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/ships.png"));
@@ -500,6 +504,18 @@ void Draw()
 	target.x += 700;
 	SDL_RenderCopy(g.renderer, g.background5, nullptr, &target);
 
+	// Scroll and draw background 5
+
+	g.scroll6 += SCROLL_SPEED6;
+	if (g.scroll6 >= 700)
+		g.scroll6 = 0;
+
+	target = { -g.scroll6, 0, 700, SCREEN_HEIGHT };
+
+	SDL_RenderCopy(g.renderer, g.background6, nullptr, &target);
+	target.x += 700;
+	SDL_RenderCopy(g.renderer, g.background6, nullptr, &target);
+
 	//Draw explosion
 	for (int i = 0; i < NUM_ENEMIES; ++i)
 	{
@@ -519,7 +535,7 @@ void Draw()
 		if (g.tanks[i].explosion == false)
 		{
 			Mix_PlayChannel(-1, g.exp, 0);
-			target = { g.tanks[i].x, g.tanks[i].y, 32, 32 };
+			target = { g.tanks[i].x, g.tanks[i].y, 64, 64 };
 			SDL_RenderCopy(g.renderer, g.Sprites, &g.Explosion, &target);
 			g.tanks[i].explosion = true;
 		}
