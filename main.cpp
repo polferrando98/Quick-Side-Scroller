@@ -66,8 +66,8 @@
 #define NUM_TANKS 80
 #define ENEMY_TEXTURE_WIDTH 165
 #define TANK_TEXTURE_WIDTH 80
-#define ENEMY_SPEED 7
-#define ENEMY_SPEEDT 6
+#define ENEMY_SPEED 5
+#define ENEMY_SPEEDT 4
 #define COLLISION_MARGIN 10
 #define COLLISION_MARGIN_Y 30
 #define COLLISION_MARGIN_SX 40
@@ -202,7 +202,7 @@ void Start()
 
 	//Init tanks	
 	for (int i = 0; i < NUM_TANKS; ++i) {
-		g.tanks[i].x = SCREEN_WIDTH + 50 + (300 * i);
+		g.tanks[i].x = SCREEN_WIDTH + 50 + (500 * i);
 		g.tanks[i].y = 390;
 		g.tanks[i].alive = true;
 		g.tanks[i].explosion = true;
