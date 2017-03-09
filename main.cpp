@@ -54,7 +54,11 @@
 // Globals --------------------------------------------------------
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
-#define SCROLL_SPEED 5
+#define SCROLL_SPEED 0
+#define SCROLL_SPEED2 1
+#define SCROLL_SPEED3 2
+#define SCROLL_SPEED4 4
+#define SCROLL_SPEED5 5
 #define SHIP_SPEED 3
 #define NUM_SHOTS 32
 #define SHOT_SPEED 5
@@ -62,11 +66,12 @@
 #define NUM_TANKS 20
 #define ENEMY_TEXTURE_WIDTH 165
 #define TANK_TEXTURE_WIDTH 80
-#define ENEMY_SPEED 1
+#define ENEMY_SPEED 6
+#define ENEMY_SPEEDT 5
 #define COLLISION_MARGIN 10
 #define COLLISION_MARGIN_Y 30
-#define COLLISION_MARGIN_SX 140
-#define COLLISION_MARGIN_SY 40
+#define COLLISION_MARGIN_SX 40
+#define COLLISION_MARGIN_SY 20
 #define TANK_COLLISION_MARGIN 50
 
 struct projectile
@@ -100,13 +105,17 @@ struct globals
 	SDL_Renderer* renderer = nullptr;
 	SDL_Rect Explosion;
 	SDL_Texture* background = nullptr;
+	SDL_Texture* background2 = nullptr;
+	SDL_Texture* background3 = nullptr;
+	SDL_Texture* background4 = nullptr;
+	SDL_Texture* background5 = nullptr;
 	SDL_Texture* gameover = nullptr;
 	SDL_Texture* ship = nullptr;
 	SDL_Texture* shot = nullptr;
 	SDL_Texture* enemy_texture = nullptr;
 	SDL_Texture* Sprites = nullptr;
 	SDL_Texture* tanks_texture = nullptr;
-	int background_width = 0;
+	int background_width = 640;
 	int ship_x = 0;
 	int ship_y = 0;
 	int last_shot = 0;
@@ -116,6 +125,10 @@ struct globals
 	Mix_Chunk* fx_shoot = nullptr;
 	Mix_Chunk* exp = nullptr;
 	int scroll = 0;
+	int scroll2 = 0;
+	int scroll3 = 0;
+	int scroll4 = 0;
+	int scroll5 = 0;
 	projectile shots[NUM_SHOTS];
 	enemy enemies[NUM_ENEMIES];
 	tank tanks[NUM_TANKS];
@@ -140,7 +153,11 @@ void Start()
 
 	// Load image lib --
 	IMG_Init(IMG_INIT_PNG);
-	g.background = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/background.png"));
+	g.background = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/parallax-mountain-bg.png"));
+	g.background2 = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/background2.png"));
+	g.background3= SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/background3.png"));
+	g.background4 = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/background4.png"));
+	g.background5 = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/background5.png"));
 	g.ship = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/ship.png"));
 	g.shot = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/shot.png"));
 	g.enemy_texture = SDL_CreateTextureFromSurface(g.renderer, IMG_Load("assets/ships.png"));
@@ -173,8 +190,8 @@ void Start()
 	int fila;
 	int col;
 	for (int i = 0; i < NUM_ENEMIES; i++) {
-		g.enemies[i].x = SCREEN_WIDTH + 50 + (200 * i) ;
-		g.enemies[i].y = (rand()%400)+80; //Random position 
+		g.enemies[i].x = SCREEN_WIDTH + 50 + (400 * i) ;
+		g.enemies[i].y = (rand()%400)-20; //Random position 
 		g.enemies[i].alive = true;
 		g.enemies[i].explosion = true;
 		g.enemies[i].ex_sound = false;
@@ -185,8 +202,8 @@ void Start()
 
 	//Init tanks	
 	for (int i = 0; i < NUM_TANKS; ++i) {
-		g.tanks[i].x = SCREEN_WIDTH + 50 + (200 * i);
-		g.tanks[i].y = 430;
+		g.tanks[i].x = SCREEN_WIDTH + 50 + (300 * i);
+		g.tanks[i].y = 390;
 		g.tanks[i].alive = true;
 		g.tanks[i].explosion = true;
 		g.tanks[i].ex_sound = false;		
@@ -290,12 +307,12 @@ void collisionDetection()
 			}
 		}
 	}
-
+	
 	for (int enemy_index = 0; enemy_index < NUM_TANKS; enemy_index++) {
 			if (g.tanks[enemy_index].alive == true) {
-				if ( g.ship_x+COLLISION_MARGIN_SX> g.enemies[enemy_index].x) {
+				if ( g.ship_x+ COLLISION_MARGIN_SX > g.enemies[enemy_index].x) {
 					if ((g.ship_x - COLLISION_MARGIN_SX) < g.enemies[enemy_index].x) {
-						if ((g.ship_y + COLLISION_MARGIN) > g.enemies[enemy_index].y) {
+						if ((g.ship_y + COLLISION_MARGIN_SY) > g.enemies[enemy_index].y) {
 							if ((g.ship_y - COLLISION_MARGIN_SY) < g.enemies[enemy_index].y) {
 								g.retu = false;
 							}
@@ -304,6 +321,7 @@ void collisionDetection()
 				}
 			}
 		}
+		
 }
 
 // ----------------------------------------------------------------
@@ -382,7 +400,7 @@ void MoveStuff()
 		if (g.tanks[i].alive)
 		{
 			if (1)
-				g.tanks[i].x -= ENEMY_SPEED;
+				g.tanks[i].x -= ENEMY_SPEEDT;
 			else
 				g.tanks[i].alive = false;
 		}
@@ -394,16 +412,47 @@ void Draw()
 {
 	SDL_Rect target;
 
-	// Scroll and draw background
-	g.scroll += SCROLL_SPEED;
-	if(g.scroll >= g.background_width)
-		g.scroll = 0;
+	target = { 0, 0, 640, 370 };
+	SDL_RenderCopy(g.renderer, g.background, nullptr, &target);
 
-	target = { -g.scroll, 0, g.background_width, SCREEN_HEIGHT };
+	// Scroll and draw background 2
+
+	g.scroll2 += SCROLL_SPEED2;
+	if(g.scroll2 >= 700)
+	g.scroll2 = 0;
+
+	target = { -g.scroll2, -100, 700, SCREEN_HEIGHT };
+
+	SDL_RenderCopy(g.renderer, g.background2, nullptr, &target);
+	target.x += 700;
+	SDL_RenderCopy(g.renderer, g.background2, nullptr, &target);
+
+	// Scroll and draw background 3
+
+	g.scroll3 += SCROLL_SPEED3;
+	if (g.scroll3 >= 1000)
+		g.scroll3 = 0;
+
+	target = { -g.scroll3, 0, 1000, SCREEN_HEIGHT };
+
+	SDL_RenderCopy(g.renderer, g.background3, nullptr, &target);
+	target.x += 1000;
+	SDL_RenderCopy(g.renderer, g.background3, nullptr, &target);
+
+	// Scroll and draw background 3
+
+	g.scroll4 += SCROLL_SPEED4;
+	if (g.scroll4 >= 1000)
+		g.scroll4 = 0;
+
+	target = { -g.scroll4, -0, 1000, SCREEN_HEIGHT };
+
+	SDL_RenderCopy(g.renderer, g.background4, nullptr, &target);
+	target.x += 1000;
+	SDL_RenderCopy(g.renderer, g.background4, nullptr, &target);
+
+
 	
-	SDL_RenderCopy(g.renderer, g.background, nullptr, &target);
-	target.x += g.background_width;
-	SDL_RenderCopy(g.renderer, g.background, nullptr, &target);
 
 	// Draw player's ship --
 	target = { g.ship_x, g.ship_y, 100, 40 };
@@ -424,7 +473,7 @@ void Draw()
 	{
 		if (g.enemies[i].alive)
 		{
-			target = { g.enemies[i].x, g.enemies[i].y, 88, 28 };
+			target = { g.enemies[i].x, g.enemies[i].y, 88, 35 };
 			SDL_RenderCopy(g.renderer, g.enemy_texture, &g.enemies[i].src, &target);
 		}
 	}
@@ -438,6 +487,18 @@ void Draw()
 			SDL_RenderCopy(g.renderer, g.tanks_texture, &g.tanks[i].src, &target);
 		}
 	}
+
+	// Scroll and draw background 4
+
+	g.scroll5 += SCROLL_SPEED5;
+	if (g.scroll5 >= 700)
+		g.scroll5 = 0;
+
+	target = { -g.scroll5, 85, 700, SCREEN_HEIGHT };
+
+	SDL_RenderCopy(g.renderer, g.background5, nullptr, &target);
+	target.x += 700;
+	SDL_RenderCopy(g.renderer, g.background5, nullptr, &target);
 
 	//Draw explosion
 	for (int i = 0; i < NUM_ENEMIES; ++i)
